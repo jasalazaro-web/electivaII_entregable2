@@ -9,7 +9,7 @@
 
 <section class="hero">
 	<div class="eyebrow">SvelteKit · Rick and Morty</div>
-	<h1>Entregable de Rick and Morty</h1>
+	<h1>Entregable de Rick and Morty por Johana Salazar</h1>
 	<p>
 		Base feature-first/domain-first con contratos claros entre pantalla, dominio y API.
 	</p>
