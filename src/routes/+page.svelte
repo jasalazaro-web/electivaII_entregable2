@@ -19,7 +19,9 @@
 			params.delete('q');
 		}
 
-		const target = params.toString() ? `/?${params.toString()}` : '/';
+		const target = params.toString()
+			? `${page.url.pathname}?${params.toString()}`
+			: page.url.pathname;
 
 		if (`${page.url.pathname}${page.url.search}` === target) {
 			return;
