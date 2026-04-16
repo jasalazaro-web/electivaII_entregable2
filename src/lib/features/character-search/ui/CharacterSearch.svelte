@@ -1,6 +1,33 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
+
 	export let query: string = '';
 	export let onQueryChange: (value: string) => void;
+
+	let localQuery = query;
+	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+	$: if (query !== localQuery) {
+		localQuery = query;
+	}
+
+	function handleInput(event: Event) {
+		localQuery = (event.currentTarget as HTMLInputElement).value;
+
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
+
+		debounceTimer = setTimeout(() => {
+			onQueryChange(localQuery);
+		}, 300);
+	}
+
+	onDestroy(() => {
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
+	});
 </script>
 
 <label class="search">
@@ -8,8 +35,8 @@
 	<input
 		type="search"
 		placeholder="Rick, Morty, Summer..."
-		value={query}
-		on:input={(event) => onQueryChange((event.currentTarget as HTMLInputElement).value)}
+		value={localQuery}
+		on:input={handleInput}
 	/>
 </label>
 

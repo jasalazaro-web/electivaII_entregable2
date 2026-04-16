@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { CharacterBrowser } from '$lib/features/character-browser';
 	import type { PageData } from './$types';
 
@@ -7,13 +8,23 @@
 
 	function updateQuery(value: string) {
 		const trimmed = value.trim();
-		const params = new URLSearchParams();
+		const params = new URLSearchParams(page.url.searchParams);
+
+		params.delete('name');
+		params.delete('page');
 
 		if (trimmed) {
 			params.set('q', trimmed);
+		} else {
+			params.delete('q');
 		}
 
 		const target = params.toString() ? `/?${params.toString()}` : '/';
+
+		if (`${page.url.pathname}${page.url.search}` === target) {
+			return;
+		}
+
 		goto(target, { replaceState: true, noScroll: true });
 	}
 </script>

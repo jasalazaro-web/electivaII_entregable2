@@ -1,5 +1,5 @@
 import { environment } from '$lib/core/config/environment';
-import { createHttpClient, type QueryParams } from './http';
+import { HttpClientError, createHttpClient, type HttpClient, type QueryParams } from './http';
 import { mapCharacter } from '$lib/entities/character/mappers';
 import type { ApiCharacter, Character } from '$lib/entities/character/types';
 import { mapEpisode } from '$lib/entities/episode';
@@ -116,16 +116,48 @@ function mapListResponse<TApi, TDomain>(
 	};
 }
 
+function createEmptyListResponse<T>(): ApiListResponse<T> {
+	return {
+		info: {
+			count: 0,
+			pages: 0,
+			next: null,
+			prev: null
+		},
+		results: []
+	};
+}
+
+async function fetchListResponse<TApi>(
+	http: HttpClient,
+	path: string,
+	query: QueryParams
+): Promise<ApiListResponse<TApi>> {
+	try {
+		return await http.get<ApiListResponse<TApi>>(path, {
+			query,
+			memoize: true
+		});
+	} catch (error) {
+		if (error instanceof HttpClientError && error.status === 404) {
+			return createEmptyListResponse<TApi>();
+		}
+
+		throw error;
+	}
+}
+
 function createCharacterService(fetchImpl: typeof fetch) {
 	const http = createRickAndMortyHttp(fetchImpl);
 
 	return {
 		async listCharacters(filters: CharacterFilters = {}): Promise<CharacterListResult> {
 			const normalizedFilters = toCharacterFilters(filters);
-			const response = await http.get<ApiListResponse<ApiCharacter>>('/character', {
-				query: normalizedFilters as QueryParams,
-				memoize: true
-			});
+			const response = await fetchListResponse<ApiCharacter>(
+				http,
+				'/character',
+				normalizedFilters as QueryParams
+			);
 			const list = mapListResponse(response, mapCharacter);
 
 			return {
@@ -151,10 +183,11 @@ function createEpisodeService(fetchImpl: typeof fetch) {
 	return {
 		async listEpisodes(filters: EpisodeFilters = {}): Promise<EpisodeListResult> {
 			const normalizedFilters = toEpisodeFilters(filters);
-			const response = await http.get<ApiListResponse<ApiEpisode>>('/episode', {
-				query: normalizedFilters as QueryParams,
-				memoize: true
-			});
+			const response = await fetchListResponse<ApiEpisode>(
+				http,
+				'/episode',
+				normalizedFilters as QueryParams
+			);
 			const list = mapListResponse(response, mapEpisode);
 
 			return {
@@ -180,10 +213,11 @@ function createLocationService(fetchImpl: typeof fetch) {
 	return {
 		async listLocations(filters: LocationFilters = {}): Promise<LocationListResult> {
 			const normalizedFilters = toLocationFilters(filters);
-			const response = await http.get<ApiListResponse<ApiLocation>>('/location', {
-				query: normalizedFilters as QueryParams,
-				memoize: true
-			});
+			const response = await fetchListResponse<ApiLocation>(
+				http,
+				'/location',
+				normalizedFilters as QueryParams
+			);
 			const list = mapListResponse(response, mapLocation);
 
 			return {
